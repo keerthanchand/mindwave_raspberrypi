@@ -9,18 +9,54 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
 
+attention_treshold = 60
+
 lst = []
 eyeblinks = 0
 armed = False
-movingClockWise = False
+left = False
+right = False
+forward = False
 print("Searching for Mindwave device")
 
+in1 = 26
+in2 = 19
+in3 = 13
+in4 = 6
+
+def turn_on(gpio_pin):
+    GPIO.setup(gpio_pin, GPIO.OUT)
+    GPIO.output(gpio_pin, True)
+
+def turn_off(gpio_pin):
+    GPIO.setup(gpio_pin, GPIO.OUT)
+    GPIO.output(gpio_pin, False)
 
 
-def get_eye_blinks():
-    eyeblinks = 0
+
+def move_forward():
+    turn_on(in1)
+    turn_off(in2)
+    turn_on(in3)
+    turn_off(in4)
+
+def stop():
+    turn_off(in1)
+    turn_off(in2)
+    turn_off(in3)
+    turn_off(in4)
+
+def turn_left():
+    turn_on(in1)
+    turn_off(in2)
+    turn_off(in3)
+    turn_off(in4)
     
-    return eyeblinks
+def turn_right():
+    turn_off(in1)
+    turn_off(in2)
+    turn_on(in3)
+    turn_off(in4)
 
 
 
@@ -59,31 +95,63 @@ if _name_ == '_main_':
 #             if (not dataPoint._class_ is EEGPowersDataPoint and not dataPoint._class_ is RawDataPoint):
 #                 print(dataPoint)
             
-#             if eyeblinks >3:
-#                 if(armed):
-#                     print("Vehicle is disarmed")
-#                     armed = Falset
-#                     GPIO.setup(16, GPIO.OUT)
-#                     GPIO.output(16, False)
-#                 else:
-#                     print("Vehicle is armed")
-#                     armed = True
-#                     GPIO.setup(16, GPIO.OUT)
-#                     GPIO.output(16, True)
-#             
-#             if armed:
-#                 if movingClockWise and eyeblinks == 2:
-#                     print("Stopped Moving clockwise")
-#                     movingClockWise = False
-#                     GPIO.setup(21, GPIO.OUT)
-#                     GPIO.output(21, False)
-#                 elif not(movingClockWise) and eyeblinks == 2:
-#                     print("Moving clockwise")
-#                     movingClockWise = True
-#                     GPIO.setup(21, GPIO.OUT)
-#                     GPIO.output(21, True)
-#             
+            if eyeblinks >3:
+                if(armed):
+                    print("Vehicle is disarmed")
+                    armed = False
+                    movingClockWise = False
+                    left = False
+                    right = False
+                    forward = False
+                    GPIO.setup(20, GPIO.OUT)
+                    GPIO.output(20, False)
+                else:
+                    print("Vehicle is armed")
+                    armed = True
+                    GPIO.setup(20, GPIO.OUT)
+                    GPIO.output(20, True)
+            
+            if armed:
+                if attention_level > attention_treshold:
+                    print("Moving Forward")
+                    left = False
+                    forward = True
+                    right = False
+                else:
+                    print("Not Moving Forward")
+                    left = False
+                    forward = False
+                    right = False
+                if eyeblinks == 2:
+                    left = True
+                    forward = False
+                    right = False
+                elif eyeblinks == 3:
+                    left = False
+                    right = True
+                    forward = False
+                
+            
             eyeblinks = 0
+            if forward:
+                move_forward()
+            else:
+                stop()
+            if left:
+                stop()
+                turn_left()
+                time.sleep(1)
+                left = False
+                stop()
+            if right:
+                stop()
+                turn_right()
+                time.sleep(1)
+                right = False
+                stop()
+                
+                
+                
                 
     else:
         print((textwrap.dedent("""\
