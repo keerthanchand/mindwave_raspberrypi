@@ -24,6 +24,13 @@ in2 = 19
 in3 = 13
 in4 = 6
 
+
+TRIG = 23                                  #Associate pin 23 to TRIG
+ECHO = 24
+
+GPIO.setup(TRIG,GPIO.OUT)                  #Set pin as GPIO out
+GPIO.setup(ECHO,GPIO.IN) 
+
 def turn_on(gpio_pin):
     GPIO.setup(gpio_pin, GPIO.OUT)
     GPIO.output(gpio_pin, True)
@@ -134,7 +141,25 @@ if _name_ == '_main_':
             
             eyeblinks = 0
             if forward:
-                move_forward()
+                loop_start = time.time()
+                loop_end = time.time()
+                while(loop_end - loop_start < 2):
+                    loop_end = time.time()
+                    GPIO.output(TRIG, False)
+                    GPIO.output(TRIG, True)                  #Set TRIG as HIGH
+                    time.sleep(0.00001)                      #Delay of 0.00001 seconds
+                    GPIO.output(TRIG, False)
+                    while GPIO.input(ECHO)==0:
+                        pulse_start = time.time()
+                    while GPIO.input(ECHO)==1:
+                        pulse_end = time.time()
+                    pulse_duration = pulse_end - pulse_start
+                    distance = pulse_duration * 17150
+                    distance = round(distance, 2)
+                    if distance < 30:
+                        stop()
+                    else:
+                        move_forward()
             else:
                 stop()
             if left:
